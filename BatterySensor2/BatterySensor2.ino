@@ -2,10 +2,6 @@
 
 /* 
  *  Battery-powered MySensors-2.0 sensor
- *  Multiple DS18B20 handling
- *  
- *  requires: OneWire, DallasTemperature
- *  
  */
  
 #include <avr/sleep.h>  // Sleep Modes
@@ -19,7 +15,7 @@
 #include <MySensors.h>
 #include <SPI.h>
 
-#define DEBUG true
+#define DEBUG
 
 #define SKETCH_NAME "Battery Sensor"
 #define SKETCH_MAJOR_VER "0"
@@ -27,6 +23,8 @@
 
 // unsigned long SLEEP_TIME = 24*60*60*1000; // h*min*sec*1000
 unsigned long SLEEP_TIME = 60*1000; // 60s
+int unusedPins[] = {2, 3, 4, 5, 6, 7, 8};
+
 
 int oldBatLevel;
 
@@ -34,6 +32,9 @@ int oldBatLevel;
  * MySensors 2,0 presentation
  */
 void presentation() {
+#ifdef DEBUG
+  Serial.println("presentation");
+#endif
   sendSketchInfo(SKETCH_NAME, SKETCH_MAJOR_VER "." SKETCH_MINOR_VER);
 }
 
@@ -43,14 +44,13 @@ void presentation() {
 void setup()
 {
 #ifdef DEBUG
-  Serial.println("Setup function");
+  Serial.println("setup");
 #endif
   // Reset pins
-  int pins[] = {2, 3, 4, 5, 6, 7, 8};
-  int count = sizeof(pins)/sizeof(int);
+  int count = sizeof(unusedPins)/sizeof(int);
   for (int i = 0; i < count; i++) {
-    pinMode(pins[i], INPUT);
-    digitalWrite(pins[i], LOW);
+    pinMode(unusedPins[i], INPUT);
+    digitalWrite(unusedPins[i], LOW);
   }
   oldBatLevel = -1;
 }
@@ -60,10 +60,10 @@ void setup()
  */
 void loop() {
 #ifdef DEBUG
-  Serial.println("Loop function");
+  Serial.println("loop");
 #endif
+
   // Read sensors and send on wakeup
-  
   sendValues();
 
   // Go to sleep
@@ -76,7 +76,7 @@ void loop() {
 void sendValues()
 {
 #ifdef DEBUG
-  Serial.println("sendValues function");
+  Serial.println("sendValues");
 #endif
 
   // Send sensor values
