@@ -2,6 +2,10 @@
 
 /* 
  *  Battery-powered MySensors-2.0 sensor
+ *  Multiple DS18B20 handling
+ *  
+ *  requires: OneWire, DallasTemperature
+ *  
  */
  
 #include <avr/sleep.h>  // Sleep Modes
