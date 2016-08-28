@@ -19,7 +19,7 @@
 
 #define SKETCH_NAME "Battery Sensor"
 #define SKETCH_MAJOR_VER "0"
-#define SKETCH_MINOR_VER "1"
+#define SKETCH_MINOR_VER "2"
 #define BATTERY_SENSOR 0
 
 // unsigned long SLEEP_TIME = 24*60*60*1000; // h*min*sec*1000
@@ -28,7 +28,6 @@ int unusedPins[] = {2, 3, 4, 5, 6, 7, 8};
 
 // Globals
 int oldBatLevel;
-MyMessage vMsg(BATTERY_SENSOR, V_VOLTAGE, "Battery Voltage"); 
 
 // MySensors messages
 MyMessage vMsg(BATTERY_SENSOR, V_VOLTAGE);
