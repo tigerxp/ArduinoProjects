@@ -5,11 +5,17 @@
  *  Multiple DS18B20 handling
  *  
  *  requires: OneWire, DallasTemperature
- *  
  */
  
 #include <avr/sleep.h>  // Sleep Modes
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
+// Dallas Settings
+#define ONE_WIRE_BUS 2
+#define TEMPERATURE_PRECISION 9 // Lower resolution
+
+// MySensors settings
 #define MY_DEBUG
 #define MY_RADIO_NRF24
 // #define MY_BAUD_RATE 9600
@@ -28,7 +34,14 @@
 // unsigned long SLEEP_TIME = 24*60*60*1000; // h*min*sec*1000
 unsigned long SLEEP_TIME = 60*1000; // 60s
 
-int oldBatLevel;
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+
+// Globals
+int oldBatLevel; // Old battery level
+
+int numberOfDevices; // Number of temperature devices found
+DeviceAddress tempDeviceAddress; // Found device address
 
 /*
  * MySensors 2,0 presentation
@@ -53,6 +66,12 @@ void setup()
     digitalWrite(pins[i], LOW);
   }
   oldBatLevel = -1;
+
+  // Set up sensors
+  sensors.begin();
+numberOfDevices = sensors.getDeviceCount();
+
+  
 }
 
 /*
