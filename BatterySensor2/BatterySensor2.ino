@@ -26,7 +26,7 @@
 
 #define DEBUG
 
-#define SKETCH_NAME "Multiple DS* Tempertature Sensor"
+#define SKETCH_NAME "Multiple Dallas Sensors"
 #define SKETCH_MAJOR_VER "0"
 #define SKETCH_MINOR_VER "2"
 #define BATTERY_SENSOR 0
