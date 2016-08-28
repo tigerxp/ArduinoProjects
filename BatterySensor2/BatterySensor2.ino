@@ -29,6 +29,7 @@
 #define SKETCH_NAME "Multiple DS* Tempertature Sensor"
 #define SKETCH_MAJOR_VER "0"
 #define SKETCH_MINOR_VER "1"
+#define BATTERY_SENSOR 0
 
 // unsigned long SLEEP_TIME = 24*60*60*1000; // h*min*sec*1000
 unsigned long SLEEP_TIME = 60*1000; // 60s
@@ -39,12 +40,12 @@ DallasTemperature sensors(&oneWire);
 
 // Globals
 int oldBatLevel; // Old battery level
-
 int numberOfDevices; // Number of temperature devices found
 DeviceAddress tempDeviceAddress; // Found device address
 
-// MySensors message
-MyMessage msg(0, V_TEMP); // Sensor Id will be dynamic
+// MySensors messages
+MyMessage vMsg(BATTERY_SENSOR, V_VOLTAGE, "Battery Voltage");
+MyMessage msg(1, V_TEMP); // Sensor Id will be dynamic
 
 /*
  * MySensors 2,0 presentation
@@ -54,6 +55,7 @@ void presentation() {
   Serial.println("presentation");
 #endif
   sendSketchInfo(SKETCH_NAME, SKETCH_MAJOR_VER "." SKETCH_MINOR_VER);
+  present(BATTERY_SENSOR, S_MULTIMETER);
   for (int i = 0; i < numberOfDevices; i++) {
     present(i + 1, S_TEMP); // start from 1
   }
@@ -144,7 +146,11 @@ void sendValues()
     }
   } // for
   // Send battery level
-  int batLevel = getBatteryLevel();
+  long vcc = readVcc();
+  float v = vcc / 1000.0;
+  send(vMsg.set(v, 3));
+  // get percentage
+  int batLevel = getBatteryLevel(vcc);
   if (oldBatLevel != batLevel) {
     sendBatteryLevel(batLevel);
     oldBatLevel = batLevel;
@@ -154,8 +160,10 @@ void sendValues()
 /*
  * Battery measure
  */
-int getBatteryLevel() {
-  int results = (readVcc() - 2000)  / 10;
+int getBatteryLevel(long vcc) {
+  if (vcc == NULL)
+    vcc = readVcc();
+  int results = (vcc - 2000)  / 10;
   if (results > 100)
     results = 100;
   if (results < 0)
@@ -199,9 +207,8 @@ long readVcc() {
  */
 void printAddress(DeviceAddress deviceAddress) {
   for (uint8_t i = 0; i < 8; i++) {
-    if (deviceAddress[i] < 16) 
+    if (deviceAddress[i] < 16)
       Serial.print("0");
     Serial.print(deviceAddress[i], HEX);
   }
 }
-
