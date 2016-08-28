@@ -19,6 +19,8 @@
 #include <MySensors.h>
 #include <SPI.h>
 
+#define DEBUG true
+
 #define SKETCH_NAME "Battery Sensor"
 #define SKETCH_MAJOR_VER "0"
 #define SKETCH_MINOR_VER "1"
@@ -40,6 +42,9 @@ void presentation() {
  */
 void setup()
 {
+#ifdef DEBUG
+  Serial.println("Setup function");
+#endif
   // Reset pins
   int pins[] = {2, 3, 4, 5, 6, 7, 8};
   int count = sizeof(pins)/sizeof(int);
@@ -54,6 +59,9 @@ void setup()
  * Loop
  */
 void loop() {
+#ifdef DEBUG
+  Serial.println("Loop function");
+#endif
   // Read sensors and send on wakeup
   
   sendValues();
@@ -67,6 +75,10 @@ void loop() {
  */
 void sendValues()
 {
+#ifdef DEBUG
+  Serial.println("sendValues function");
+#endif
+
   // Send sensor values
   // ...
   
@@ -113,7 +125,7 @@ long readVcc() {
   result = ADCL;
   result |= ADCH<<8;
   result = 1126400L / result; // Back-calculate AVcc in mV
-#ifdef MY_DEBUG
+#ifdef DEBUG
   Serial.print("Battery voltage is: ");
   Serial.print(result);
   Serial.println(" mV");
