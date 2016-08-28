@@ -23,12 +23,15 @@
 #define BATTERY_SENSOR 0
 
 // unsigned long SLEEP_TIME = 24*60*60*1000; // h*min*sec*1000
-unsigned long SLEEP_TIME = 60*1000; // 60s
+unsigned long SLEEP_TIME = 60*1000L; // 60s
 int unusedPins[] = {2, 3, 4, 5, 6, 7, 8};
 
-
+// Globals
 int oldBatLevel;
 MyMessage vMsg(BATTERY_SENSOR, V_VOLTAGE, "Battery Voltage"); 
+
+// MySensors messages
+MyMessage vMsg(BATTERY_SENSOR, V_VOLTAGE);
 
 /*
  * MySensors 2,0 presentation
@@ -38,11 +41,11 @@ void presentation() {
   Serial.println("presentation");
 #endif
   sendSketchInfo(SKETCH_NAME, SKETCH_MAJOR_VER "." SKETCH_MINOR_VER);
-  present(BATTERY_SENSOR, S_MULTIMETER);
+  present(BATTERY_SENSOR, S_MULTIMETER, "Battery Voltage");
 }
 
 /*
- * Sertup
+ * Setup
  */
 void setup()
 {
@@ -65,12 +68,14 @@ void loop() {
 #ifdef DEBUG
   Serial.println("loop");
 #endif
-
-  // Read sensors and send on wakeup
-  sendValues();
-
+  if (oldBatLevel == -1) { // first start
+    // Send the values before sleeping
+    sendValues();
+  }
   // Go to sleep
   sleep(SLEEP_TIME);
+  // Read sensors and send on wakeup
+  sendValues();
 }
 
 /*
