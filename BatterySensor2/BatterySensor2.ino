@@ -20,6 +20,7 @@
 #define SKETCH_NAME "Battery Sensor"
 #define SKETCH_MAJOR_VER "0"
 #define SKETCH_MINOR_VER "1"
+#define BATTERY_SENSOR 0
 
 // unsigned long SLEEP_TIME = 24*60*60*1000; // h*min*sec*1000
 unsigned long SLEEP_TIME = 60*1000; // 60s
@@ -27,6 +28,7 @@ int unusedPins[] = {2, 3, 4, 5, 6, 7, 8};
 
 
 int oldBatLevel;
+MyMessage vMsg(BATTERY_SENSOR, V_VOLTAGE, "Battery Voltage"); 
 
 /*
  * MySensors 2,0 presentation
@@ -36,6 +38,7 @@ void presentation() {
   Serial.println("presentation");
 #endif
   sendSketchInfo(SKETCH_NAME, SKETCH_MAJOR_VER "." SKETCH_MINOR_VER);
+  present(BATTERY_SENSOR, S_MULTIMETER);
 }
 
 /*
@@ -83,7 +86,11 @@ void sendValues()
   // ...
   
   // Send battery level
-  int batLevel = getBatteryLevel();
+  long vcc = readVcc();
+  float v = vcc / 1000.0;
+  send(vMsg.set(v, 3));
+  // get percentage
+  int batLevel = getBatteryLevel(vcc);
   if (oldBatLevel != batLevel) {
     sendBatteryLevel(batLevel);
     oldBatLevel = batLevel;
@@ -93,8 +100,10 @@ void sendValues()
 /*
  * Battery measure
  */
-int getBatteryLevel() {
-  int results = (readVcc() - 2000)  / 10;
+int getBatteryLevel(long vcc) {
+  if (vcc == NULL)
+    vcc = readVcc();
+  int results = (vcc - 2000)  / 10;
   if (results > 100)
     results = 100;
   if (results < 0)
