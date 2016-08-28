@@ -46,6 +46,9 @@ DeviceAddress tempDeviceAddress; // Found device address
 MyMessage vMsg(BATTERY_SENSOR, V_VOLTAGE);
 MyMessage msg(1, V_TEMP); // Sensor Id will be dynamic
 
+// MySensors messages
+MyMessage vMsg(BATTERY_SENSOR, V_VOLTAGE);
+
 /*
  * MySensors 2,0 presentation
  */
