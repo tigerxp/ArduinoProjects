@@ -1,5 +1,3 @@
-#include <Arduino.h>
-
 /*
  *  Battery-powered MySensors-2.0 sensor
  *
@@ -12,7 +10,9 @@
 
 // Dallas Settings
 #define ONE_WIRE_BUS 2
-#define TEMPERATURE_PRECISION 9 // Lower resolution
+#define TEMPERATURE_PRECISION 12
+#define NUM_DIGITS 3 // Number of digits in float
+
 
 // MySensors settings
 #define MY_DEBUG
@@ -26,14 +26,13 @@
 
 #define DEBUG
 
-#define SKETCH_NAME "Battery Sensor"
+#define SKETCH_NAME "Multiple DS* Tempertature Sensor"
 #define SKETCH_MAJOR_VER "0"
 #define SKETCH_MINOR_VER "1"
 
 // unsigned long SLEEP_TIME = 24*60*60*1000; // h*min*sec*1000
 unsigned long SLEEP_TIME = 60*1000; // 60s
-int unusedPins[] = {2, 3, 4, 5, 6, 7, 8};
-
+int unusedPins[] = {3, 4, 5, 6, 7, 8};
 
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
@@ -44,6 +43,9 @@ int oldBatLevel; // Old battery level
 int numberOfDevices; // Number of temperature devices found
 DeviceAddress tempDeviceAddress; // Found device address
 
+// MySensors message
+MyMessage msg(0, V_TEMP); // Sensor Id will be dynamic
+
 /*
  * MySensors 2,0 presentation
  */
@@ -52,10 +54,13 @@ void presentation() {
   Serial.println("presentation");
 #endif
   sendSketchInfo(SKETCH_NAME, SKETCH_MAJOR_VER "." SKETCH_MINOR_VER);
+  for (int i = 0; i < numberOfDevices; i++) {
+    present(i + 1, S_TEMP); // start from 1
+  }
 }
 
 /*
- * Sertup
+ * Setup
  */
 void setup()
 {
@@ -72,9 +77,27 @@ void setup()
 
   // Set up sensors
   sensors.begin();
-numberOfDevices = sensors.getDeviceCount();
+  numberOfDevices = sensors.getDeviceCount();
+  Serial.print("Found ");
+  Serial.print(numberOfDevices, DEC);
+  Serial.println(" devices.");
 
-
+  // Set up each device
+  for (int i = 0; i < numberOfDevices; i++) {
+    if (sensors.getAddress(tempDeviceAddress, i)) {
+      Serial.print("Device ");
+      Serial.print(i, DEC);
+      Serial.print(" address: ");
+      printAddress(tempDeviceAddress);
+      Serial.println();
+      // Setting resolution
+      sensors.setResolution(tempDeviceAddress, TEMPERATURE_PRECISION);
+    } else {
+      Serial.print("Found ghost device at ");
+      Serial.print(i, DEC);
+      Serial.print(" but could not detect address. Check power and cabling");
+    }
+  } // for
 }
 
 /*
@@ -84,7 +107,6 @@ void loop() {
 #ifdef DEBUG
   Serial.println("loop");
 #endif
-
   // Read sensors and send on wakeup
   sendValues();
 
@@ -100,10 +122,27 @@ void sendValues()
 #ifdef DEBUG
   Serial.println("sendValues");
 #endif
+  Serial.print("Requesting temperatures...");
+  sensors.requestTemperatures(); // Send the command to get temperatures
+  Serial.println("done.");
 
   // Send sensor values
-  // ...
-
+  for (int i = 0; i < numberOfDevices; i++) {
+    if (sensors.getAddress(tempDeviceAddress, i)) {
+      float temp = sensors.getTempC(tempDeviceAddress);
+#ifdef DEBUG
+      Serial.print("Temperature for device ");
+      Serial.print(i);
+      Serial.print(": ");
+      Serial.println(temp);
+#endif
+      msg.setSensor(i + 1); // start from 1
+      send(msg.set(temp, NUM_DIGITS), true);
+    } else {
+      Serial.print("Found ghost device while reading temp at ");
+      Serial.println(i, DEC);
+    }
+  } // for
   // Send battery level
   int batLevel = getBatteryLevel();
   if (oldBatLevel != batLevel) {
@@ -154,3 +193,15 @@ long readVcc() {
 #endif
   return result;
 }
+
+/*
+ * Print a device address
+ */
+void printAddress(DeviceAddress deviceAddress) {
+  for (uint8_t i = 0; i < 8; i++) {
+    if (deviceAddress[i] < 16) 
+      Serial.print("0");
+    Serial.print(deviceAddress[i], HEX);
+  }
+}
+
